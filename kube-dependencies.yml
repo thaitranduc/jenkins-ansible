@@ -1,35 +1,26 @@
+- hosts: master
+  become: yes	
+  tasks:
+   - name: set name master
+     shell: hostnamectl set-hostname 'k8-master'
+- hosts: worker1
+  become: yes
+  tasks:
+   - name: set name worker1
+     shell: hostnamectl set-hostname 'k8-worker1'
+- hosts: worker2
+  become: yes
+  tasks:
+   - name: set name worker2
+     shell: hostnamectl set-hostname 'k8-worker2'
 - hosts: all
   become: yes
   tasks:
-   - name: install Docker
-     yum:
-       name: docker
-       state: present
-       update_cache: true
-
-   - name: start Docker
-     service:
-       name: docker
-       state: started
-
-   - name: disable SELinux
-     command: setenforce 0
-
-   - name: disable SELinux on reboot
-     selinux:
-       state: disabled
-
-   - name: ensure net.bridge.bridge-nf-call-ip6tables is set to 1
-     sysctl:
-      name: net.bridge.bridge-nf-call-ip6tables
-      value: 1
-      state: present
-
-   - name: ensure net.bridge.bridge-nf-call-iptables is set to 1
-     sysctl:
-      name: net.bridge.bridge-nf-call-iptables
-      value: 1
-      state: present
+   - name: setup firewall rules
+     shell: sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+  
+   - name: setup bridge
+     shell: echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 
    - name: add Kubernetes' YUM repository
      yum_repository:
@@ -38,29 +29,5 @@
       baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
       gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
       gpgcheck: yes
-
-   - name: install kubelet
-     yum:
-        name: kubelet-1.14.0
-        state: present
-        update_cache: true
-
-   - name: install kubeadm
-     yum:
-        name: kubeadm-1.14.0
-        state: present
-
-   - name: start kubelet
-     service:
-       name: kubelet
-       enabled: yes
-       state: started
-
-- hosts: master
-  become: yes
-  tasks:
-   - name: install kubectl
-     yum:
-        name: kubectl-1.14.0
-        state: present
-        allow_downgrade: yes
+   - name: swap off
+     shell: swapoff -a

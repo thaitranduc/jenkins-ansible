@@ -1,0 +1,37 @@
+- hosts: master
+  become: yes
+  tasks:
+    - name: install kubeadm
+      shell: yum install kubeadm docker -y
+
+    - name: restart docker service
+      shell: systemctl restart docker && systemctl enable docker
+
+    - name: restart kubelet
+      shell: systemctl restart kubelet && systemctl enable kubelet
+    
+    - name: kubeadm create
+      shell: kubeadm init
+      
+    - name: create .kube directory
+      become: yes
+      become_user: root
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+    
+    - name: copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: $HOME/.kube/config
+        remote_src: yes
+        owner: root
+
+    - name: install Pod network
+      become: yes
+      become_user: root
+      shell: 
+        export kubever=$(kubectl version | base64 | tr -d '\n') && kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$kubever" 
+      args:
+        chdir: $HOME

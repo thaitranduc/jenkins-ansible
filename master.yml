@@ -11,7 +11,7 @@
       shell: systemctl restart kubelet && systemctl enable kubelet
     
     - name: kubeadm create
-      shell: kubeadm init
+      shell: kubeadm init --ignore-preflight-errors=ALL
       
     - name: create .kube directory
       become: yes

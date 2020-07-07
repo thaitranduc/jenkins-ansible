@@ -24,3 +24,4 @@
       shell: "{{ hostvars['master'].join_command }} --ignore-preflight-errors=all"
       args:
         chdir: $HOME
+      ignore_errors: yes

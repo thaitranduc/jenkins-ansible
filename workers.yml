@@ -21,6 +21,6 @@
       shell: systemctl restart docker && systemctl enable docker
 
     - name: join cluster
-      shell: "{{ hostvars['master'].join_command }} --ignore-preflight-errors all"
+      shell: "{{ hostvars['master'].join_command }} --ignore-preflight-errors=all"
       args:
         chdir: $HOME

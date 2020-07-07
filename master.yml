@@ -12,6 +12,7 @@
     
     - name: kubeadm create
       shell: kubeadm init --ignore-preflight-errors=ALL
+      ignore_errors: yes
       
     - name: create .kube directory
       become: yes

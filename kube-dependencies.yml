@@ -3,22 +3,55 @@
   tasks:
    - name: set name master
      shell: hostnamectl set-hostname 'k8-master'
+     
 - hosts: worker1
   become: yes
   tasks:
    - name: set name worker1
      shell: hostnamectl set-hostname 'k8-worker1'
-- hosts: worker2
-  become: yes
-  tasks:
-   - name: set name worker2
-     shell: hostnamectl set-hostname 'k8-worker2'
+     
 - hosts: all
   become: yes
   tasks:
+   - name: disabling SELinux
+     shell: setenforce 0
+     ignore_errors: yes
+   
    - name: setup firewall rules
      shell: sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
   
+   - name: setup firewall 6443
+     shell: firewall-cmd --permanent --add-port=6443/tcp
+     ignore_errors: yes
+   
+   - name: setup firewall 2379-2380
+     shell: firewall-cmd --permanent --add-port=2379-2380/tcp
+     ignore_errors: yes
+     
+   - name: setup firewall 10250
+     shell: firewall-cmd --permanent --add-port=10250/tcp
+     ignore_errors: yes
+     
+   - name: setup firewall 10251
+     shell: firewall-cmd --permanent --add-port=10251/tcp
+     ignore_errors: yes
+     
+   - name: setup firewall 10252
+     shell: firewall-cmd --permanent --add-port=10252/tcp
+     ignore_errors: yes
+     
+   - name: setup firewall 10255
+     shell: firewall-cmd --permanent --add-port=10255/tcp
+     ignore_errors: yes
+          
+   - name: setup firewall reload
+     shell: firewall-cmd --permanent --add-port=2379-2380/tcp
+     ignore_errors: yes     
+     
+   - name: setup firewall modprobe 
+     shell: modprobe br_netfilter
+     ignore_errors: yes
+     
    - name: setup bridge
      shell: echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
 
@@ -29,5 +62,6 @@
       baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
       gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
       gpgcheck: yes
+      
    - name: swap off
      shell: swapoff -a
